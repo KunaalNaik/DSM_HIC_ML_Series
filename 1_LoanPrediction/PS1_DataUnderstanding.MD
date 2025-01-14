@@ -62,11 +62,11 @@ This project ensures participants are ready to approach datasets with confidence
 ## Tasks: Data Understanding 
 
 
-### **Main Task 1: Loading and Previewing the Dataset**
+## **Main Task 1: Loading and Previewing the Dataset**
 
 ---
 
-#### **Sub-Task 1-1: Import Libraries and Load the Dataset**
+### Sub-Task 1-1: Import Libraries and Load the Dataset
 
 **Description**:  
 The objective is to import the `pandas` library and load the dataset `train_loan_prediction.csv` into a DataFrame for further analysis.
