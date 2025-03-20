@@ -230,9 +230,9 @@ y_test_pred = logistic_model.predict(X_test)
 # Calculate metrics
 baseline_metrics = {
     "Accuracy": accuracy_score(y_test, y_test_pred),
-    "Precision": precision_score(y_test, y_test_pred),
-    "Recall": recall_score(y_test, y_test_pred),
-    "F1 Score": f1_score(y_test, y_test_pred),
+    "Precision": precision_score(y_test, y_test_pred, pos_label='Y'),  # Specify the positive class
+    "Recall": recall_score(y_test, y_test_pred, pos_label='Y'),
+    "F1 Score": f1_score(y_test, y_test_pred, pos_label='Y'),
     "ROC-AUC": roc_auc_score(y_test, logistic_model.predict_proba(X_test)[:, 1]),
 }
 baseline_metrics
@@ -259,11 +259,17 @@ Remove highly correlated features to avoid redundancy.
 
 ```python
 # Calculate correlation matrix
-correlation_matrix = X.corr()
+correlation_matrix = X.corr().abs()
 
-# Filter features with high correlation
-correlation_threshold = 0.8
-filtered_features = [col for col in correlation_matrix.columns if abs(correlation_matrix[col].max()) < correlation_threshold]
+# Select features with correlation below the threshold (excluding self-correlation)
+correlation_threshold = 0.8  # Typical threshold for feature removal
+upper_triangle = correlation_matrix.where(np.triu(np.ones(correlation_matrix.shape), k=1).astype(bool))
+
+# Identify features with high correlation
+high_corr_features = [column for column in upper_triangle.columns if any(upper_triangle[column] > correlation_threshold)]
+
+# Remove highly correlated features
+filtered_features = [col for col in X.columns if col not in high_corr_features]
 
 # Display filtered features
 filtered_features
@@ -292,8 +298,15 @@ logistic_model_filtered.fit(X_train_filtered, y_train)
 Evaluate the model trained with filtered features and compare performance metrics.
 
 ```python
+# Convert target variable to numeric values
+y_train = y_train.map({'Y': 1, 'N': 0})
+y_test = y_test.map({'Y': 1, 'N': 0})
+
 # Predict on the test set with filtered features
 y_test_pred_filtered = logistic_model_filtered.predict(X_test_filtered)
+
+# Convert predictions to numeric values
+y_test_pred_filtered = pd.Series(y_test_pred_filtered).map({'Y': 1, 'N': 0})
 
 # Calculate metrics for filtered features model
 metrics_filtered = {
@@ -421,7 +434,7 @@ Use Lasso Regression (L1 regularization) to perform feature selection.
 
 ```python
 # Apply Lasso Regression
-lasso = LassoCV(cv=5)
+lasso = LassoCV(cv=5, alphas=[0.01, 0.005, 0.001, 0.0005, 0.0001])
 lasso.fit(X_train, y_train)
 
 # Select non-zero coefficient features
